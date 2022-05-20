@@ -17,7 +17,7 @@ export interface AdapterSession {
 export interface VerificationToken {
   identifier: string
   expires: Date
-  userId?: string //TODO: GREEN add this
+  userId?: string // TODO: GREEN add this
   token: string
 }
 
@@ -62,7 +62,10 @@ export interface Adapter {
   getUserByEmail: (email: string) => Awaitable<AdapterUser | null>
   /** Using the provider id and the id of the user for a specific account, get the user. */
   getUserByAccount: (
-    providerAccountId: Pick<Account, "provider" | "providerAccountId">
+    providerAccountId: Pick<
+      Account,
+      "provider" | "providerAccountId" | "userId"
+    >
   ) => Awaitable<AdapterUser | null>
   updateUser: (user: Partial<AdapterUser>) => Awaitable<AdapterUser>
   /** @todo Implement */
