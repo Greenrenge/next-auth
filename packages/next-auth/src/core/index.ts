@@ -108,7 +108,8 @@ export async function NextAuthHandler<
           let signinUrl = `${pages.signIn}${
             pages.signIn.includes("?") ? "&" : "?"
           }callbackUrl=${encodeURIComponent(options.callbackUrl)}`
-          if (error) signinUrl = `${signinUrl}&error=${encodeURIComponent(error)}`
+          if (error)
+            signinUrl = `${signinUrl}&error=${encodeURIComponent(error)}`
           return { redirect: signinUrl, cookies }
         }
 
@@ -177,6 +178,7 @@ export async function NextAuthHandler<
             query: req.query,
             body: req.body,
             options,
+            sessionStore, //TODO: GREEN add this for find user in case linking email to twitter
           })
           if (signin.cookies) cookies.push(...signin.cookies)
           return { ...signin, cookies }

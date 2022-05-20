@@ -17,6 +17,7 @@ export interface AdapterSession {
 export interface VerificationToken {
   identifier: string
   expires: Date
+  userId?: string //TODO: GREEN add this
   token: string
 }
 

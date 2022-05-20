@@ -1,9 +1,17 @@
 {
-  "extends": "@next-auth/tsconfig/base.json",
   "compilerOptions": {
+    "target": "es2019",
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "emitDeclarationOnly": true,
     "strictNullChecks": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "strict": false,
     "module": "esnext",
@@ -16,5 +24,10 @@
     "baseUrl": ".",
     "outDir": "."
   },
-  "exclude": ["./*.js", "./*.d.ts", "config", "**/__tests__"]
+  "exclude": [
+    "./*.js",
+    "./*.d.ts",
+    "config",
+    "**/__tests__"
+  ]
 }

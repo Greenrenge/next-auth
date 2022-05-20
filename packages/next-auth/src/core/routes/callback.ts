@@ -200,7 +200,12 @@ export default async function callback(params: {
     try {
       // Verified in `assertConfig`
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const { useVerificationToken, getUserByEmail } = adapter!
+      const {
+        useVerificationToken,
+        getUserByEmail,
+        getUser,
+        getUserByAccount,
+      } = adapter!
 
       const token = query?.token
       const identifier = query?.email
@@ -215,30 +220,72 @@ export default async function callback(params: {
         return { redirect: `${url}/error?error=Verification`, cookies }
       }
 
+      const userId = invite?.userId
       // If it is an existing user, use that, otherwise use a placeholder
-      const profile = (identifier
-        ? await getUserByEmail(identifier)
-        : null) ?? {
-        email: identifier,
+      // TODO: GREEN we don't create new user here, and we prioritized the OAuth/Email that has been taken by someone
+      const profile =
+        (identifier ? await getUserByEmail(identifier) : null) ??
+        (userId && (await getUser(userId)))
+
+      // ??   {
+      //   email: identifier,
+      // }
+      if (!profile || !userId) {
+        logger.error(
+          "GREEN",
+          new Error("not found bound user to the invite/token")
+        )
+        return { redirect: `${url}/error?error=Verification`, cookies }
+      }
+
+      if (
+        profile.email &&
+        profile.email === identifier &&
+        userId?.toString() !== profile.id.toString()
+      ) {
+        // found other user that might have the same email, and register after email was sent
+        return { redirect: `${url}/link_taken`, cookies }
+      }
+
+      const userLinkedToEmail = await getUserByAccount({
+        providerAccountId: identifier,
+        provider: provider.id,
+      })
+
+      if (
+        userLinkedToEmail &&
+        userLinkedToEmail?.id?.toString() === userId.toString()
+      ) {
+        // link is clicked twice
+        return { redirect: `${url}/link_success`, cookies }
+      } else if (userLinkedToEmail && userLinkedToEmail?.id?.toString()) {
+        // link is taken by other user
+        return { redirect: `${url}/link_taken`, cookies }
       }
 
       /** @type {import("src").Account} */
       const account = {
-        providerAccountId: profile.email,
+        providerAccountId: identifier, // profile.email,
         type: "email",
-        provider: provider.id,
+        provider: provider.id, // email ?
       }
+
+      // if (!profile.email) {
+      //   // oauth user which no email
+      //   profile.email = identifier
+      // }
 
       // Check if user is allowed to sign in
       try {
-        const signInCallbackResponse = await callbacks.signIn({
-          // @ts-expect-error
-          user: profile,
-          // @ts-expect-error
-          account,
-          // @ts-expect-error
-          email: { email: identifier },
-        })
+        const signInCallbackResponse = true // TODO: GREEN on callback path in email if token is valid, and user was found this should not denied
+        // const signInCallbackResponse = await callbacks.signIn({
+        //   // @ts-expect-error
+        //   user: profile,
+        //   // @ts-expect-error
+        //   account,
+        //   // @ts-expect-error
+        //   email: { email: identifier },
+        // })
         if (!signInCallbackResponse) {
           return { redirect: `${url}/error?error=AccessDenied`, cookies }
         } else if (typeof signInCallbackResponse === "string") {
@@ -257,7 +304,6 @@ export default async function callback(params: {
       // @ts-expect-error
       const { user, session, isNewUser } = await callbackHandler({
         sessionToken: sessionStore.value,
-        // @ts-expect-error
         profile,
         // @ts-expect-error
         account,

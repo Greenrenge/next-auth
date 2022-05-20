@@ -84,30 +84,39 @@ export default async function callbackHandler(params: {
 
   if (account.type === "email") {
     // If signing in with an email, check if an account with the same email address exists already
-    const userByEmail = profile.email
+    // profile.email might be first set
+    const userInDb = profile.email //TODO: GREEN should be always same
       ? await getUserByEmail(profile.email)
-      : null
-    if (userByEmail) {
-      // If they are not already signed in as the same user, this flow will
-      // sign them out of the current session and sign them in as the new user
-      if (user?.id !== userByEmail.id && !useJwtSession && sessionToken) {
-        // Delete existing session if they are currently signed in as another user.
-        // This will switch user accounts for the session in cases where the user was
-        // already logged in with a different account.
-        await deleteSession(sessionToken)
-      }
+      : await getUser(profile.id)
 
-      // Update emailVerified property on the user object
-      user = await updateUser({ id: userByEmail.id, emailVerified: new Date() })
-      await events.updateUser?.({ user })
-    } else {
-      const newUser = { ...profile, emailVerified: new Date() }
-      delete (newUser as Omit<AdapterUser, "id">).id
-      // Create user account if there isn't one for the email address already
-      user = await createUser(newUser)
-      await events.createUser?.({ user })
-      isNewUser = true
+    if (!userInDb) throw new Error("userInDb is null") //TODO: GREEN should not happen
+
+    // If they are not already signed in as the same user, this flow will
+    // sign them out of the current session and sign them in as the new user
+    if (user?.id !== userInDb.id && !useJwtSession && sessionToken) {
+      // Delete existing session if they are currently signed in as another user.
+      // This will switch user accounts for the session in cases where the user was
+      // already logged in with a different account.
+      await deleteSession(sessionToken)
     }
+
+    // Update emailVerified property on the user object
+    user = await updateUser({
+      id: userInDb.id,
+      emailVerified: new Date(),
+      email: account.providerAccountId, //TODO: GREEN update profile email to the account email (verification email)
+    })
+    await events.updateUser?.({ user })
+
+    //TODO: GREEN NOT ALLOW TO CREATE NEW USER
+    // else {
+    //   const newUser = { ...profile, emailVerified: new Date() }
+    //   delete (newUser as Omit<AdapterUser, "id">).id
+    //   // Create user account if there isn't one for the email address already
+    //   user = await createUser(newUser)
+    //   await events.createUser?.({ user })
+    //   isNewUser = true
+    // }
 
     // Create new session
     session = useJwtSession
@@ -117,6 +126,10 @@ export default async function callbackHandler(params: {
           userId: user.id,
           expires: fromDate(options.session.maxAge),
         })
+
+    //TODO: GREEN LINK THE EMAIL ACC
+    await linkAccount({ ...account, userId: user.id })
+    await events.linkAccount?.({ user, account })
 
     return { session, user, isNewUser }
   } else if (account.type === "oauth") {

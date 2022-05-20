@@ -3,14 +3,16 @@ import emailSignin from "../lib/email/signin"
 import { IncomingRequest, OutgoingResponse } from ".."
 import { InternalOptions } from "../../lib/types"
 import { Account, User } from "../.."
+import { SessionStore } from "../lib/cookie"
 
 /** Handle requests to /api/auth/signin */
 export default async function signin(params: {
   options: InternalOptions<"oauth" | "email">
   query: IncomingRequest["query"]
   body: IncomingRequest["body"]
+  sessionStore?: SessionStore
 }): Promise<OutgoingResponse> {
-  const { options, query, body } = params
+  const { options, query, body, sessionStore } = params
   const { url, adapter, callbacks, logger, provider } = options
 
   if (!provider.type) {
@@ -30,6 +32,8 @@ export default async function signin(params: {
       return { redirect: `${url}/error?error=OAuthSignin` }
     }
   } else if (provider.type === "email") {
+    // TODO: GREEN not sure do we need to save twitter email ?
+    // TODO: GREEN to change login to a link email with current user's id
     // Note: Technically the part of the email address local mailbox element
     // (everything before the @ symbol) should be treated as 'case sensitive'
     // according to RFC 2821, but in practice this causes more problems than
@@ -55,13 +59,13 @@ export default async function signin(params: {
 
     // Check if user is allowed to sign in
     try {
-      // @ts-expect-error
-      const signInCallbackResponse = await callbacks.signIn({
-        user,
-        account,
-        email: { verificationRequest: true },
-      })
-      if (!signInCallbackResponse) {
+      const signInCallbackResponse = true // TODO: GREEN hard code to allow linkage to twitter acc
+      // await callbacks.signIn({
+      //   user,
+      //   account,
+      //   email: { verificationRequest: true },
+      // })
+      if (!signInCallbackResponse || !sessionStore) {
         return { redirect: `${url}/error?error=AccessDenied` }
       } else if (typeof signInCallbackResponse === "string") {
         return { redirect: signInCallbackResponse }
@@ -75,7 +79,15 @@ export default async function signin(params: {
     }
 
     try {
-      await emailSignin(email, options)
+      const failedPage = await emailSignin(email, options, sessionStore) // TODO: GREEN send sessionStore here
+      // TODO: GREEN this return is modified to prevent user link the linked account
+      if (failedPage) {
+        logger.error(
+          "SIGNIN_EMAIL_ERROR",
+          new Error("Email signin failed" + failedPage)
+        )
+        return { redirect: `${url}/${failedPage}` }
+      }
     } catch (error) {
       logger.error("SIGNIN_EMAIL_ERROR", error as Error)
       return { redirect: `${url}/error?error=EmailSignin` }
