@@ -258,9 +258,19 @@ export default async function callback(params: {
       ) {
         // link is clicked twice
         return { redirect: `${url}/link_success`, cookies }
-      } else if (userLinkedToEmail && userLinkedToEmail?.id?.toString()) {
+      } else if (userLinkedToEmail?.id?.toString()) {
         // link is taken by other user
         return { redirect: `${url}/link_taken`, cookies }
+      }
+
+      const existingLinkOfUser = await getUserByAccount({
+        provider: provider.id,
+        userId,
+      })
+
+      if (existingLinkOfUser) {
+        // user has linked to other email acc
+        return { redirect: `${url}/error?error=Verification`, cookies }
       }
 
       /** @type {import("src").Account} */
