@@ -62,10 +62,9 @@ export interface Adapter {
   getUserByEmail: (email: string) => Awaitable<AdapterUser | null>
   /** Using the provider id and the id of the user for a specific account, get the user. */
   getUserByAccount: (
-    providerAccountId: Pick<
-      Account,
-      "provider" | "providerAccountId" | "userId"
-    >
+    providerAccountId:
+      | Pick<Account, "provider" | "providerAccountId">
+      | Pick<Account, "provider" | "userId">
   ) => Awaitable<AdapterUser | null>
   updateUser: (user: Partial<AdapterUser>) => Awaitable<AdapterUser>
   /** @todo Implement */
