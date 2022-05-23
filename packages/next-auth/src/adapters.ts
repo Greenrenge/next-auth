@@ -65,6 +65,7 @@ export interface Adapter {
     providerAccountId:
       | Pick<Account, "provider" | "providerAccountId">
       | Pick<Account, "provider" | "userId">
+      | Account
   ) => Awaitable<AdapterUser | null>
   updateUser: (user: Partial<AdapterUser>) => Awaitable<AdapterUser>
   /** @todo Implement */

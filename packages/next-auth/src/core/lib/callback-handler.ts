@@ -59,7 +59,7 @@ export default async function callbackHandler(params: {
 
   let session: AdapterSession | JWT | null = null
   let user: AdapterUser | null = null
-  let isNewUser = false
+  const isNewUser = false
 
   const useJwtSession = sessionStrategy === "jwt"
 
@@ -85,11 +85,11 @@ export default async function callbackHandler(params: {
   if (account.type === "email") {
     // If signing in with an email, check if an account with the same email address exists already
     // profile.email might be first set
-    const userInDb = profile.email //TODO: GREEN should be always same
+    const userInDb = profile.email // TODO: GREEN should be always same
       ? await getUserByEmail(profile.email)
       : await getUser(profile.id)
 
-    if (!userInDb) throw new Error("userInDb is null") //TODO: GREEN should not happen
+    if (!userInDb) throw new Error("userInDb is null") // TODO: GREEN should not happen
 
     // If they are not already signed in as the same user, this flow will
     // sign them out of the current session and sign them in as the new user
@@ -104,11 +104,11 @@ export default async function callbackHandler(params: {
     user = await updateUser({
       id: userInDb.id,
       emailVerified: new Date(),
-      email: account.providerAccountId, //TODO: GREEN update profile email to the account email (verification email)
+      email: account.providerAccountId, // TODO: GREEN update profile email to the account email (verification email)
     })
     await events.updateUser?.({ user })
 
-    //TODO: GREEN NOT ALLOW TO CREATE NEW USER
+    // TODO: GREEN NOT ALLOW TO CREATE NEW USER
     // else {
     //   const newUser = { ...profile, emailVerified: new Date() }
     //   delete (newUser as Omit<AdapterUser, "id">).id
@@ -127,18 +127,26 @@ export default async function callbackHandler(params: {
           expires: fromDate(options.session.maxAge),
         })
 
-    //TODO: GREEN LINK THE EMAIL ACC
+    // TODO: GREEN LINK THE EMAIL ACC
     await linkAccount({ ...account, userId: user.id })
     await events.linkAccount?.({ user, account })
 
     return { session, user, isNewUser }
   } else if (account.type === "oauth") {
+    // TODO: GREEN allow only twitter passed when user is null
+    if (!user && account.provider !== "twitter")
+      throw new AccountNotLinkedError(
+        "Allow only linkage to twitter account only, not for signup"
+      )
+
     // If signing in with OAuth account, check to see if the account exists already
     const userByAccount = await getUserByAccount({
       providerAccountId: account.providerAccountId,
       provider: account.provider,
     })
+    // TODO: GREEN, linked already happen
     if (userByAccount) {
+      // TODO: GREEN user already created, linked again
       if (user) {
         // If the user is already signed in with this account, we don't need to do anything
         if (userByAccount.id === user.id) {
@@ -151,6 +159,7 @@ export default async function callbackHandler(params: {
           "The account is already associated with another user"
         )
       }
+      // TODO: GREEN twitter login will come here
       // If there is no active session, but the account being signed in with is already
       // associated with a valid user then create session to sign the user in.
       session = useJwtSession
@@ -163,7 +172,9 @@ export default async function callbackHandler(params: {
 
       return { session, user: userByAccount, isNewUser }
     } else {
+      // TODO: signup, new link
       if (user) {
+        // TODO: link other social to existing user
         // If the user is already signed in and the OAuth account isn't already associated
         // with another user account then we can go ahead and link the accounts safely.
         await linkAccount({ ...account, userId: user.id })
@@ -190,6 +201,7 @@ export default async function callbackHandler(params: {
       //
       // OAuth providers should require email address verification to prevent this, but in
       // practice that is not always the case; this helps protect against that.
+      // TODO: GREEN twitter signup
       const userByEmail = profile.email
         ? await getUserByEmail(profile.email)
         : null
