@@ -170,7 +170,7 @@ export async function NextAuthHandler<
         return render.error({ error: error as ErrorType })
       default:
         return {
-          redirect: action,
+          redirect: `/${action}`,
           cookies,
         }
     }
