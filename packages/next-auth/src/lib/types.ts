@@ -44,6 +44,8 @@ export type NextAuthAction =
   | "callback"
   | "verify-request"
   | "error"
+  | "link-taken" // TODO: GREEN
+  | "link-success" // TODO: GREEN
   | "_log"
 
 /** @internal */
