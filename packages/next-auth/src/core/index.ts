@@ -129,6 +129,7 @@ export async function NextAuthHandler<
             options,
             sessionStore,
           })
+
           if (callback.cookies) cookies.push(...callback.cookies)
           return { ...callback, cookies }
         }
@@ -178,7 +179,7 @@ export async function NextAuthHandler<
             query: req.query,
             body: req.body,
             options,
-            sessionStore, //TODO: GREEN add this for find user in case linking email to twitter
+            sessionStore, // TODO: GREEN add this for find user in case linking email to twitter
           })
           if (signin.cookies) cookies.push(...signin.cookies)
           return { ...signin, cookies }

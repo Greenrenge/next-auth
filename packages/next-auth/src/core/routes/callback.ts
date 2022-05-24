@@ -159,7 +159,7 @@ export default async function callback(params: {
         }
 
         // @ts-expect-error
-        await events.signIn?.({ user, account, profile, isNewUser })
+        await events.signIn?.({ user, account, profile, isNewUser }) // TODO: GREEN event for quest ??
 
         // Handle first logins on new accounts
         // e.g. option to send users to a new account landing page on initial login
@@ -172,10 +172,11 @@ export default async function callback(params: {
             cookies,
           }
         }
-
+        // TODO: GREEN switch case for telegram/facebook/discord to check quest
         // Callback URL is already verified at this point, so safe to use if specified
         return { redirect: callbackUrl, cookies }
       } catch (error) {
+        logger.error("OAUTH_LINK_ERROR", error as Error) // TODO: GREEN log error
         if ((error as Error).name === "AccountNotLinkedError") {
           // If the email on the account is already linked, but not with this OAuth account
           return {
@@ -244,7 +245,7 @@ export default async function callback(params: {
         userId?.toString() !== profile.id.toString()
       ) {
         // found other user that might have the same email, and register after email was sent
-        return { redirect: `${url}/link_taken`, cookies }
+        return { redirect: `${url}/link-taken`, cookies }
       }
 
       const userLinkedToEmail = await getUserByAccount({
@@ -257,10 +258,10 @@ export default async function callback(params: {
         userLinkedToEmail?.id?.toString() === userId.toString()
       ) {
         // link is clicked twice
-        return { redirect: `${url}/link_success`, cookies }
+        return { redirect: `${url}/link-success`, cookies }
       } else if (userLinkedToEmail?.id?.toString()) {
         // link is taken by other user
-        return { redirect: `${url}/link_taken`, cookies }
+        return { redirect: `${url}/link-taken`, cookies }
       }
 
       const existingLinkOfUser = await getUserByAccount({

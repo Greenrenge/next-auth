@@ -73,12 +73,12 @@ export default async function email(
   })
 
   if (userLinkedToEmail?.id?.toString() === user.id.toString()) {
-    //user already link
-    return "link_success"
+    // user already link
+    return "link-success"
   }
-  if (!!userLinkedToEmail?.id?.toString()) {
-    //email already linked to another user
-    return "link_taken"
+  if (userLinkedToEmail?.id?.toString()) {
+    // email already linked to another user
+    return "link-taken"
   }
 
   const userHasSameEmail = await getUserByEmail(identifier)
@@ -87,15 +87,15 @@ export default async function email(
     userHasSameEmail.id.toString() !== user.id.toString()
   ) {
     // someone else OAuth has the same email
-    return "link_taken"
+    return "link-taken"
   }
 
-  //TODO: GREEN many users may have the same identifier here
+  // TODO: GREEN many users may have the same identifier here
   // Save in database
   // @ts-expect-error
   await adapter.createVerificationToken({
     identifier,
-    userId: user.id, //TODO: GREEN put the requester id in here ??
+    userId: user.id, // TODO: GREEN put the requester id in here ??
     token: hashToken(token, options),
     expires,
   })
