@@ -169,6 +169,10 @@ export async function NextAuthHandler<
 
         return render.error({ error: error as ErrorType })
       default:
+        return {
+          redirect: action,
+          cookies,
+        }
     }
   } else if (method === "POST") {
     switch (action) {
