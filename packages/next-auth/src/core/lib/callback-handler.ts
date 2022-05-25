@@ -180,6 +180,14 @@ export default async function callbackHandler(params: {
             expires: fromDate(options.session.maxAge),
           })
 
+      if (updateAccount && getAccount) {
+        const acc = await getAccount({
+          providerAccountId: account.providerAccountId,
+          provider: account.provider,
+        })
+        await updateAccount({ ...acc, ...account })
+      }
+
       return { session, user: userByAccount, isNewUser }
     } else {
       // TODO: signup, new link
