@@ -67,12 +67,23 @@ export interface Adapter {
       | Pick<Account, "provider" | "userId">
       | Account
   ) => Awaitable<AdapterUser | null>
+  // TODO: GREEN add this
+  getAccount?: (
+    providerAccountId:
+      | Pick<Account, "provider" | "providerAccountId">
+      | Pick<Account, "provider" | "userId">
+      | Account
+  ) => Awaitable<Account | null>
   updateUser: (user: Partial<AdapterUser>) => Awaitable<AdapterUser>
   /** @todo Implement */
   deleteUser?: (
     userId: string
   ) => Promise<void> | Awaitable<AdapterUser | null | undefined>
   linkAccount: (
+    account: Account
+  ) => Promise<void> | Awaitable<Account | null | undefined>
+  updateAccount?: (
+    // TODO: GREEN add this
     account: Account
   ) => Promise<void> | Awaitable<Account | null | undefined>
   /** @todo Implement */

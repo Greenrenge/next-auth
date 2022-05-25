@@ -51,6 +51,8 @@ export default async function callbackHandler(params: {
     getUser,
     getUserByAccount,
     getUserByEmail,
+    updateAccount,
+    getAccount,
     linkAccount,
     createSession,
     getSessionAndUser,
@@ -150,6 +152,14 @@ export default async function callbackHandler(params: {
       if (user) {
         // If the user is already signed in with this account, we don't need to do anything
         if (userByAccount.id === user.id) {
+          // TODO: GREEN update account
+          if (updateAccount && getAccount) {
+            const acc = await getAccount({
+              providerAccountId: account.providerAccountId,
+              provider: account.provider,
+            })
+            await updateAccount({ ...acc, ...account })
+          }
           return { session, user, isNewUser }
         }
         // If the user is currently signed in, but the new account they are signing in
